@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>우리 가게</title>
+<meta name="theme-color" content="#2f7d72">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="우리 가게">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --bg:#f4f2ec;        /* 따뜻한 오프화이트 */
+    --card:#fbfaf6;
+    --line:#e4e0d6;
+    --line2:#d8d3c6;
+    --text:#26262a;      /* 잉크 */
+    --sub:#8a857a;
+    --accent:#2f7d72;    /* 차분한 청록 */
+    --accent-soft:#e7efeb;
+    --green:#3f7d52; --green-bg:#e7efe6;
+    --yellow:#a9772a; --yellow-bg:#f4ecdb;
+    --red:#b4493f;   --red-bg:#f3e2df;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
+    background:var(--bg); color:var(--text);
+    font-size:17px; padding-bottom:84px; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    background:var(--bg); padding:22px 20px 16px;
+    position:sticky; top:0; z-index:5;
+    border-bottom:1px solid var(--line);
+  }
+  header .eyebrow{
+    font-size:11px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--accent); font-weight:700; margin-bottom:5px;
+  }
+  header h1{margin:0; font-size:25px; font-weight:800; letter-spacing:-.6px;}
+  header .date{font-size:13px; color:var(--sub); margin-top:4px; letter-spacing:.2px;}
+
+  /* 탭바 (하단 고정) */
+  .tabbar{
+    position:fixed; bottom:0; left:0; right:0;
+    display:flex; background:var(--card); border-top:1px solid var(--line);
+    z-index:10; overflow-x:auto; padding:0 2px;
+  }
+  .tabbar::-webkit-scrollbar{display:none;}
+  .tabbar button{
+    flex:1 0 auto; min-width:60px; border:none; background:none;
+    padding:9px 2px 11px; font-size:11px; font-weight:600; color:var(--sub);
+    display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;
+    position:relative; transition:color .15s; white-space:nowrap;
+  }
+  .tabbar button .ic{font-size:19px; opacity:.55; transition:opacity .15s;}
+  .tabbar button.active{color:var(--accent);}
+  .tabbar button.active .ic{opacity:1;}
+  .tabbar button.active::after{
+    content:''; position:absolute; top:0; left:22%; right:22%; height:2.5px;
+    background:var(--accent); border-radius:0 0 3px 3px;
+  }
+
+  main{padding:18px 18px 8px;}
+  .hidden{display:none;}
+
+  /* 항목 추가 입력줄 */
+  .addrow{display:flex; gap:8px; margin-bottom:18px;}
+  .addrow input[type=text]{
+    flex:1; padding:13px 15px; font-size:16px; border:1px solid var(--line2);
+    border-radius:12px; background:var(--card); color:var(--text);
+  }
+  .addrow input::placeholder{color:#b3ad9f;}
+  .addrow input:focus{outline:none; border-color:var(--accent); background:#fff;}
+  .addbtn{
+    background:var(--accent); color:#fff; border:none; border-radius:12px;
+    padding:0 18px; font-size:22px; font-weight:500; cursor:pointer; line-height:1;
+  }
+  .addbtn:active{opacity:.85;}
+
+  /* 체크리스트 카드 */
+  .item{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:15px 16px; margin-bottom:10px; display:flex; align-items:center; gap:13px;
+    transition:background .15s, border-color .15s;
+  }
+  .item .label{flex:1; font-size:17px; font-weight:500; word-break:break-all; letter-spacing:-.2px;}
+  .item .sub{font-size:12.5px; color:var(--sub); font-weight:500; margin-top:3px; letter-spacing:.1px;}
+  .checkbox{
+    width:30px; height:30px; border-radius:9px; border:1.5px solid var(--line2);
+    background:#fff; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:#fff; cursor:pointer; transition:all .15s;
+  }
+  .item.done{background:var(--accent-soft); border-color:#bcd5cd;}
+  .item.done .checkbox{background:var(--accent); border-color:var(--accent);}
+  .item.done .label{color:var(--accent); text-decoration:line-through; text-decoration-thickness:1.5px; text-decoration-color:#9bc1b7;}
+
+  .del{
+    background:none; border:none; color:#cac4b6; font-size:18px; cursor:pointer;
+    padding:4px 4px; flex-shrink:0; line-height:1;
+  }
+  .del:active{color:var(--red);}
+
+  /* 재고 3단계 버튼 */
+  .stock-btns{display:flex; gap:5px; flex-shrink:0;}
+  .sbtn{
+    border:1px solid var(--line2); background:#fff; border-radius:9px;
+    padding:8px 11px; font-size:13px; font-weight:700; color:var(--sub); cursor:pointer;
+    transition:all .12s;
+  }
+  .sbtn.on-g{background:var(--green); border-color:var(--green); color:#fff;}
+  .sbtn.on-y{background:var(--yellow); border-color:var(--yellow); color:#fff;}
+  .sbtn.on-r{background:var(--red); border-color:var(--red); color:#fff;}
+  /* 재고 상태 카드: 배경색 + 왼쪽 색띠로 한눈에 구분 */
+  .item.stk-g{background:var(--green-bg); border-color:#bcd0bf; border-left:7px solid var(--green);}
+  .item.stk-y{background:var(--yellow-bg); border-color:#e0cfa8; border-left:7px solid var(--yellow);}
+  .item.stk-r{background:var(--red-bg); border-color:#e0b6b0; border-left:7px solid var(--red);}
+  .item.stk-g .label{color:#2c5a3a;}
+  .item.stk-y .label{color:#7a5418;}
+  .item.stk-r .label{color:#8a352d;}
+  .item.stk-g .sbtn:not(.on-g),
+  .item.stk-y .sbtn:not(.on-y),
+  .item.stk-r .sbtn:not(.on-r){background:rgba(255,255,255,.75);}
+  .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;background:var(--line2);}
+  .item.stk-g .dot{background:var(--green);}
+  .item.stk-y .dot{background:var(--yellow);}
+  .item.stk-r .dot{background:var(--red);}
+
+  /* 유통기한 */
+  .seg{display:flex; gap:4px; margin-bottom:16px; background:var(--line); padding:4px; border-radius:13px;}
+  .seg button{
+    flex:1; padding:11px; border:none; background:none;
+    border-radius:10px; font-size:15px; font-weight:700; color:var(--sub); cursor:pointer;
+    transition:all .15s;
+  }
+  .seg button.active{background:var(--card); color:var(--accent); box-shadow:0 1px 2px rgba(0,0,0,.06);}
+  .date-input{
+    width:100%; padding:13px 15px; font-size:16px; border:1px solid var(--line2);
+    border-radius:12px; margin-bottom:9px; background:var(--card); color:var(--text);
+    font-family:inherit;
+  }
+  .date-input:focus{outline:none; border-color:var(--accent);}
+  .hint{font-size:13px;color:var(--sub);margin:2px 4px 7px; letter-spacing:.1px;}
+
+  /* 주간 탭 */
+  .dow-pick{display:flex; gap:5px; margin-bottom:14px;}
+  .dow-btn{
+    flex:1; padding:11px 0; border:1px solid var(--line2); background:var(--card);
+    border-radius:11px; font-size:15px; font-weight:700; color:var(--sub); cursor:pointer;
+    transition:all .12s;
+  }
+  .dow-btn.is-today{border-color:var(--accent); color:var(--accent);}
+  .dow-btn.sel{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .dow-head{
+    font-size:13px; font-weight:800; color:var(--sub); letter-spacing:.4px;
+    margin:18px 2px 9px; text-transform:none;
+  }
+  .dow-head.today{color:var(--accent);}
+  .item.today-item{
+    border-color:var(--accent); border-left:7px solid var(--accent);
+    background:var(--accent-soft);
+  }
+  .item.today-item.done{background:#d6e7e0;}
+  .badge{
+    font-size:13px; font-weight:700; padding:6px 11px; border-radius:8px;
+    flex-shrink:0; white-space:nowrap; letter-spacing:.2px;
+  }
+  .badge.ok{background:var(--accent-soft); color:var(--accent);}
+  .badge.warn{background:var(--yellow-bg); color:var(--yellow);}
+  .badge.over{background:var(--red);  color:#fff;}
+  .badge.age{background:var(--accent-soft); color:var(--accent);}
+  .item.over{border-color:#e0b6b0; background:var(--red-bg);}
+
+  /* 급함 표시 */
+  .urgent-tag{
+    background:var(--red); color:#fff; font-size:11px; font-weight:700;
+    padding:2px 7px; border-radius:5px; margin-left:7px; letter-spacing:.3px;
+    vertical-align:middle;
+  }
+  .item.urgent{border-color:#e0b6b0;}
+  .miniflag{
+    background:#fff; border:1px solid var(--line2); border-radius:9px;
+    padding:8px 10px; font-size:15px; cursor:pointer; flex-shrink:0; filter:grayscale(.6); opacity:.6;
+    transition:all .12s;
+  }
+  .miniflag.on{background:var(--red-bg); border-color:#e0b6b0; filter:none; opacity:1;}
+
+  /* 메모 보드 */
+  .memo-board{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .memo{
+    background:#f6efd9; border:1px solid #ece2c4; border-radius:13px; padding:14px;
+    min-height:116px; font-size:15px; font-weight:500; cursor:pointer;
+    position:relative; white-space:pre-wrap; word-break:break-all; line-height:1.5;
+    color:#4a4533; transition:transform .1s;
+  }
+  .memo:active{transform:scale(.98);}
+  .memo:nth-child(3n+2){background:#e6eee4; border-color:#d3e0cf; color:#3c4a3a;}
+  .memo:nth-child(3n+3){background:#e4ebf0; border-color:#d0dbe3; color:#39434c;}
+  .memo.add{
+    background:none; border:1.5px dashed var(--line2); color:#b3ad9f;
+    display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:300;
+  }
+  .memo .mdel{
+    position:absolute; top:7px; right:9px; font-size:15px; color:rgba(0,0,0,.28);
+    background:none; border:none; cursor:pointer; line-height:1;
+  }
+
+  .empty{text-align:center; color:var(--sub); padding:48px 14px; font-size:15px; line-height:1.7;}
+
+  /* 모달 (메모 확대) */
+  .overlay{
+    position:fixed; inset:0; background:rgba(40,38,32,.45); z-index:50;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .overlay.hidden{display:none;}
+  .modal{
+    background:#f6efd9; width:100%; max-width:420px; border-radius:18px; padding:18px;
+    box-shadow:0 12px 40px rgba(0,0,0,.2);
+  }
+  .modal textarea{
+    width:100%; min-height:200px; border:none; background:none; resize:none;
+    font-size:17px; font-weight:500; font-family:inherit; line-height:1.55; color:#4a4533;
+  }
+  .modal textarea:focus{outline:none;}
+  .modal-btns{display:flex; gap:8px; margin-top:12px;}
+  .modal-btns button{
+    flex:1; padding:13px; border:none; border-radius:11px; font-size:16px;
+    font-weight:700; cursor:pointer;
+  }
+  .btn-save{background:var(--accent); color:#fff;}
+  .btn-close{background:rgba(0,0,0,.07); color:var(--text);}
+  .fullbtn{width:100%;padding:13px;border-radius:12px;font-size:16px;font-weight:700;border:none;background:var(--accent);color:#fff;cursor:pointer;}
+</style>
+<!-- Firebase (실시간 공유) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB4FADafE50Wfz2nPFj6Q9FkNmlt8HaOxE",
+    authDomain: "ansikdang-b74d8.firebaseapp.com",
+    databaseURL: "https://ansikdang-b74d8-default-rtdb.firebaseio.com",
+    projectId: "ansikdang-b74d8",
+    storageBucket: "ansikdang-b74d8.firebasestorage.app",
+    messagingSenderId: "80742990949",
+    appId: "1:80742990949:web:cb98ce928059ea33cc728c"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const fbRef = firebase.database().ref('storeData');
+</script>
+</head>
+<body>
+<header>
+  <div class="eyebrow">우리 가게</div>
+  <h1 id="tabTitle">영업 개점</h1>
+  <div class="date" id="todayStr"></div>
+</header>
+
+<main id="content"></main>
+
+<div class="tabbar" id="tabbar"></div>
+
+<!-- 메모 확대 모달 -->
+<div class="overlay hidden" id="memoOverlay">
+  <div class="modal">
+    <textarea id="memoText" placeholder="메모를 입력하세요"></textarea>
+    <div class="modal-btns">
+      <button class="btn-close" onclick="closeMemo()">닫기</button>
+      <button class="btn-save" onclick="saveMemo()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TABS = [
+  {id:'open',   title:'영업 개점', icon:'🌅'},
+  {id:'close',  title:'영업 마감', icon:'🌙'},
+  {id:'weekly', title:'주간',     icon:'📅'},
+  {id:'stock',  title:'재고',     icon:'📦'},
+  {id:'expiry', title:'유통기한', icon:'⏳'},
+  {id:'buy',    title:'사야할것', icon:'🛒'},
+  {id:'todo',   title:'해야할것', icon:'✅'},
+  {id:'memo',   title:'메모',     icon:'📝'},
+];
+
+// ---- 데이터 저장/불러오기 (지금은 브라우저에 저장) ----
+// ---- 데이터: Firebase(공용 공책) + 폰 백업 ----
+// 처음엔 폰에 저장된 값으로 화면을 그리고,
+// Firebase가 연결되면 공용 데이터로 자동 교체되며 실시간 반영됨.
+let DB = loadLocal();
+migrate();
+
+function loadLocal(){
+  try{ return JSON.parse(localStorage.getItem('storeDB')) || blank(); }
+  catch(e){ return blank(); }
+}
+
+// Firebase 실시간 수신: 누군가 바꾸면 여기로 들어와 화면 갱신
+function startSync(){
+  fbRef.on('value', function(snap){
+    const data = snap.val();
+    if(data){
+      DB = data;
+      migrate();
+      localStorage.setItem('storeDB', JSON.stringify(DB)); // 폰에도 백업
+    }else{
+      fbRef.set(DB);   // 공용 공책이 비어있으면 현재 내 데이터로 채움
+    }
+    render();
+  }, function(err){
+    console.warn('동기화 오류:', err);
+    render();
+  });
+}
+
+// 저장: 폰에 백업 + Firebase에 올림(→ 모든 기기에 반영)
+function save(){
+  localStorage.setItem('storeDB', JSON.stringify(DB));
+  try{ fbRef.set(DB); }catch(e){ console.warn('업로드 실패:', e); }
+}
+function blank(){
+  return { open:{staff:[],boss:[]}, close:{staff:[],boss:[]},
+           weekly:[], stock:[], expiry:[], buy:[], todo:[], memo:[],
+           lastReset:'', lastWeek:'', expiryMode:'expire', openWho:'staff', closeWho:'staff' };
+}
+
+// 예전 버전 데이터(배열) 자동 변환
+function migrate(){
+  ['open','close'].forEach(k=>{
+    if(Array.isArray(DB[k])) DB[k]={staff:DB[k], boss:[]};
+    if(!DB[k]) DB[k]={staff:[],boss:[]};
+  });
+  if(!DB.weekly) DB.weekly=[];
+  if(!DB.openWho) DB.openWho='staff';
+  if(!DB.closeWho) DB.closeWho='staff';
+  if(DB.lastWeek===undefined) DB.lastWeek='';
+}
+
+// ---- 날짜 유틸 ----
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function daysBetween(fromStr){
+  const from=new Date(fromStr); const now=new Date();
+  from.setHours(0,0,0,0); now.setHours(0,0,0,0);
+  return Math.round((now-from)/86400000);
+}
+function uid(){ return Date.now()+''+Math.floor(Math.random()*1000); }
+
+// 이번 주의 식별값 (월요일 날짜 기준) → 주가 바뀌면 주간 체크 리셋
+function weekKey(){
+  const d=new Date(); d.setHours(0,0,0,0);
+  const day=(d.getDay()+6)%7;   // 월=0 ... 일=6
+  d.setDate(d.getDate()-day);   // 이번 주 월요일
+  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+
+// ---- 자동 초기화 (개점/마감은 매일, 주간은 매주) ----
+function dailyReset(){
+  const t = todayKey();
+  if(DB.lastReset !== t){
+    ['open','close'].forEach(k=>{
+      DB[k].staff.forEach(i=> i.done=false);
+      DB[k].boss.forEach(i=> i.done=false);
+    });
+    DB.lastReset = t;
+    save();
+  }
+  const w = weekKey();
+  if(DB.lastWeek !== w){
+    DB.weekly.forEach(i=> i.done=false);
+    DB.lastWeek = w;
+    save();
+  }
+}
+
+let current = 'open';
+
+function renderTabs(){
+  const bar = document.getElementById('tabbar');
+  bar.innerHTML = TABS.map(t=>
+    `<button class="${t.id===current?'active':''}" onclick="switchTab('${t.id}')">
+       <span class="ic">${t.icon}</span>${t.title}</button>`).join('');
+}
+function switchTab(id){ current=id; render(); }
+
+function render(){
+  dailyReset();
+  renderTabs();
+  document.getElementById('tabTitle').textContent = TABS.find(t=>t.id===current).title;
+  const todayD = new Date();
+  document.getElementById('todayStr').textContent =
+    `${todayD.getFullYear()}년 ${todayD.getMonth()+1}월 ${todayD.getDate()}일`;
+  const c = document.getElementById('content');
+  if(current==='open' || current==='close') c.innerHTML = viewCheck(current);
+  else if(current==='weekly') c.innerHTML = viewWeekly();
+  else if(current==='stock') c.innerHTML = viewStock();
+  else if(current==='expiry') c.innerHTML = viewExpiry();
+  else if(current==='buy') c.innerHTML = viewBuy();
+  else if(current==='todo') c.innerHTML = viewTodo();
+  else if(current==='memo') c.innerHTML = viewMemo();
+}
+
+/* ===== 영업 개점 / 마감 (직원 / 사장 분리) ===== */
+function viewCheck(key){
+  const who = key==='open'? DB.openWho : DB.closeWho;   // 'staff' or 'boss'
+  const list = DB[key][who];
+  const ph = key==='open'
+    ? (who==='staff'?'직원 개점 항목 추가':'사장 개점 항목 추가')
+    : (who==='staff'?'직원 마감 항목 추가':'사장 마감 항목 추가');
+
+  // 직원/사장 전환 세그먼트
+  let h = `<div class="seg">
+    <button class="${who==='staff'?'active':''}" onclick="setWho('${key}','staff')">직원</button>
+    <button class="${who==='boss'?'active':''}" onclick="setWho('${key}','boss')">사장</button>
+  </div>`;
+
+  h += addRow(ph, `addCheck('${key}')`, `inp_${key}`);
+  if(list.length===0) h += `<div class="empty">위에 항목을 추가해 보세요.<br>매일 자정에 체크가 자동으로 풀려요.</div>`;
+  list.forEach(i=>{
+    h += `<div class="item ${i.done?'done':''}">
+      <div class="checkbox" onclick="toggleCheck('${key}','${i.id}')">${i.done?'✓':''}</div>
+      <div class="label" onclick="toggleCheck('${key}','${i.id}')">${esc(i.text)}</div>
+      <button class="del" onclick="delItem2('${key}','${i.id}')">🗑</button>
+    </div>`;
+  });
+  return h;
+}
+function setWho(key,who){ if(key==='open') DB.openWho=who; else DB.closeWho=who; save(); render(); }
+function addCheck(key){
+  const who = key==='open'? DB.openWho : DB.closeWho;
+  const el=document.getElementById('inp_'+key); const v=el.value.trim();
+  if(!v) return; DB[key][who].push({id:uid(),text:v,done:false}); save(); render();
+}
+function toggleCheck(key,id){
+  const who = key==='open'? DB.openWho : DB.closeWho;
+  const it=DB[key][who].find(x=>x.id===id); it.done=!it.done; save(); render();
+}
+function delItem2(key,id){
+  const who = key==='open'? DB.openWho : DB.closeWho;
+  DB[key][who]=DB[key][who].filter(x=>x.id!==id); save(); render();
+}
+
+/* ===== 주간 체크리스트 (요일별) ===== */
+const DOW = ['일','월','화','수','목','금','토'];
+function viewWeekly(){
+  const today = new Date().getDay();   // 0=일 ... 6=토
+  // 추가용: 요일 선택 + 입력
+  let h = `<div class="hint" style="margin-bottom:6px">요일을 고르고 할 일을 적으세요</div>
+    <div class="dow-pick" id="dowPick">`;
+  for(let d=0; d<7; d++){
+    h += `<button class="dow-btn ${d===selectedDow?'sel':''} ${d===today?'is-today':''}"
+            onclick="selectedDow=${d};render()">${DOW[d]}</button>`;
+  }
+  h += `</div>`;
+  h += addRow('할 일 추가 (예: 수저 전부 씻기)', 'addWeekly()', 'inp_weekly');
+
+  if(DB.weekly.length===0){
+    h += `<div class="empty">요일별 반복 할 일을 등록하세요.<br>매주 자동으로 체크가 풀리고,<br>오늘 요일 할 일은 위에서 강조돼요.</div>`;
+    return h;
+  }
+
+  // 오늘 할 일 먼저, 그 다음 요일 순서대로
+  const order = [today, ...[1,2,3,4,5,6,0].filter(d=>d!==today)];
+  order.forEach(d=>{
+    const list = DB.weekly.filter(i=>i.dow===d);
+    if(list.length===0) return;
+    const isToday = d===today;
+    h += `<div class="dow-head ${isToday?'today':''}">${DOW[d]}요일${isToday?' · 오늘':''}</div>`;
+    list.forEach(i=>{
+      h += `<div class="item ${i.done?'done':''} ${isToday?'today-item':''}">
+        <div class="checkbox" onclick="toggleWeekly('${i.id}')">${i.done?'✓':''}</div>
+        <div class="label" onclick="toggleWeekly('${i.id}')">${esc(i.text)}</div>
+        <button class="del" onclick="delItem('weekly','${i.id}')">🗑</button>
+      </div>`;
+    });
+  });
+  return h;
+}
+let selectedDow = new Date().getDay();
+function addWeekly(){
+  const el=document.getElementById('inp_weekly'); const v=el.value.trim();
+  if(!v) return; DB.weekly.push({id:uid(),text:v,dow:selectedDow,done:false}); save(); render();
+}
+function toggleWeekly(id){ const it=DB.weekly.find(x=>x.id===id); it.done=!it.done; save(); render(); }
+
+/* ===== 재고 ===== */
+function viewStock(){
+  let h = addRow('재고 항목 추가 (예: 우유)', 'addStock()', 'inp_stock');
+  if(DB.stock.length===0) h+=`<div class="empty">재고 항목을 추가하고<br>충분 / 애매 / 급구 를 눌러 상태를 표시하세요.</div>`;
+  DB.stock.forEach(i=>{
+    const cls = i.state==='g'?'stk-g':i.state==='y'?'stk-y':i.state==='r'?'stk-r':'';
+    h += `<div class="item ${cls}">
+      <span class="dot"></span>
+      <div class="label">${esc(i.text)}</div>
+      <div class="stock-btns">
+        <button class="sbtn ${i.state==='g'?'on-g':''}" onclick="setStock('${i.id}','g')">충분</button>
+        <button class="sbtn ${i.state==='y'?'on-y':''}" onclick="setStock('${i.id}','y')">애매</button>
+        <button class="sbtn ${i.state==='r'?'on-r':''}" onclick="setStock('${i.id}','r')">급구</button>
+      </div>
+      <button class="del" onclick="delItem('stock','${i.id}')">🗑</button>
+    </div>`;
+  });
+  return h;
+}
+function addStock(){
+  const el=document.getElementById('inp_stock'); const v=el.value.trim();
+  if(!v) return; DB.stock.push({id:uid(),text:v,state:''}); save(); render();
+}
+function setStock(id,s){ DB.stock.find(x=>x.id===id).state=s; save(); render(); }
+
+/* ===== 유통기한 / 숙성기한 ===== */
+function viewExpiry(){
+  const mode = DB.expiryMode||'expire';
+  let h = `<div class="seg">
+    <button class="${mode==='expire'?'active':''}" onclick="setExpMode('expire')">유통기한</button>
+    <button class="${mode==='age'?'active':''}" onclick="setExpMode('age')">숙성기한</button>
+  </div>`;
+
+  if(mode==='expire'){
+    h += `<input class="date-input" type="text" id="exp_name" placeholder="이름 (예: 생크림)">
+          <div class="hint">유통기한 날짜를 고르세요</div>
+          <input class="date-input" type="date" id="exp_date">
+          <button class="fullbtn" onclick="addExpire()">＋ 추가</button>`;
+  }else{
+    h += `<input class="date-input" type="text" id="age_name" placeholder="이름 (예: 김치)">
+          <div class="hint">만든 날짜를 고르세요 (이 날부터 며칠 지났는지 셉니다)</div>
+          <input class="date-input" type="date" id="age_date" value="${todayKey().split('-').map((x,i)=>i===0?x:x.padStart(2,'0')).join('-')}">
+          <button class="fullbtn" onclick="addAge()">＋ 추가</button>`;
+  }
+  h += `<div style="height:14px"></div>`;
+
+  const list = DB.expiry.filter(i=>i.type===mode);
+  if(list.length===0) h+=`<div class="empty">아직 항목이 없어요.</div>`;
+  list.forEach(i=>{
+    if(i.type==='expire'){
+      const left = daysLeft(i.date);
+      let bcls='ok', btxt=`D-${left}`;
+      if(left<0){ bcls='over'; btxt=`기한 ${-left}일 지남`; }
+      else if(left===0){ bcls='over'; btxt='오늘까지!'; }
+      else if(left<=3){ bcls='warn'; btxt=`D-${left}`; }
+      h += `<div class="item ${left<=0?'over':''}">
+        <div style="flex:1">
+          <div class="label">${esc(i.text)}</div>
+          <div class="sub">${i.date}</div>
+        </div>
+        <span class="badge ${bcls}">${btxt}</span>
+        <button class="del" onclick="delItem('expiry','${i.id}')">🗑</button>
+      </div>`;
+    }else{
+      const age = daysBetween(i.date);
+      h += `<div class="item">
+        <div style="flex:1">
+          <div class="label">${esc(i.text)}</div>
+          <div class="sub">${i.date} 부터</div>
+        </div>
+        <span class="badge age">숙성 ${age}일째</span>
+        <button class="del" onclick="delItem('expiry','${i.id}')">🗑</button>
+      </div>`;
+    }
+  });
+  return h;
+}
+function daysLeft(dateStr){
+  const t=new Date(dateStr); const now=new Date();
+  t.setHours(0,0,0,0); now.setHours(0,0,0,0);
+  return Math.round((t-now)/86400000);
+}
+function setExpMode(m){ DB.expiryMode=m; save(); render(); }
+function addExpire(){
+  const n=document.getElementById('exp_name').value.trim();
+  const d=document.getElementById('exp_date').value;
+  if(!n||!d){ alert('이름과 유통기한 날짜를 모두 입력하세요.'); return; }
+  DB.expiry.push({id:uid(),type:'expire',text:n,date:d}); save(); render();
+}
+function addAge(){
+  const n=document.getElementById('age_name').value.trim();
+  const d=document.getElementById('age_date').value;
+  if(!n||!d){ alert('이름과 만든 날짜를 모두 입력하세요.'); return; }
+  DB.expiry.push({id:uid(),type:'age',text:n,date:d}); save(); render();
+}
+
+/* ===== 사야할것 ===== */
+function viewBuy(){
+  let h = addRow('사야할 것 추가 (예: 설탕 1봉)', 'addBuy()', 'inp_buy');
+  // 급한것 먼저 정렬
+  const list=[...DB.buy].sort((a,b)=> (b.urgent?1:0)-(a.urgent?1:0));
+  if(list.length===0) h+=`<div class="empty">살 것을 추가하세요.<br>🔥 를 누르면 급한 항목으로 표시돼요.</div>`;
+  list.forEach(i=>{
+    const days=daysBetween(i.added);
+    h += `<div class="item ${i.urgent?'urgent':''}">
+      <div style="flex:1">
+        <div class="label">${esc(i.text)}${i.urgent?'<span class="urgent-tag">급함</span>':''}</div>
+        <div class="sub">${days===0?'오늘 추가':days+'일 동안 못 삼'}</div>
+      </div>
+      <button class="miniflag ${i.urgent?'on':''}" onclick="toggleUrgent('${i.id}')">🔥</button>
+      <button class="sbtn" style="padding:10px 13px;background:var(--accent);border-color:var(--accent);color:#fff" onclick="delItem('buy','${i.id}')">샀어요</button>
+    </div>`;
+  });
+  return h;
+}
+function addBuy(){
+  const el=document.getElementById('inp_buy'); const v=el.value.trim();
+  if(!v) return; DB.buy.push({id:uid(),text:v,added:todayKey(),urgent:false}); save(); render();
+}
+function toggleUrgent(id){ const it=DB.buy.find(x=>x.id===id); it.urgent=!it.urgent; save(); render(); }
+
+/* ===== 해야할것 ===== */
+function viewTodo(){
+  let h = addRow('해야 할 일 추가', 'addTodo()', 'inp_todo');
+  if(DB.todo.length===0) h+=`<div class="empty">할 일을 추가하세요.<br>완료를 누르면 사라져요.</div>`;
+  DB.todo.forEach(i=>{
+    h += `<div class="item">
+      <div class="label">${esc(i.text)}</div>
+      <button class="sbtn" style="padding:11px 16px;background:var(--accent);border-color:var(--accent);color:#fff" onclick="delItem('todo','${i.id}')">완료</button>
+    </div>`;
+  });
+  return h;
+}
+function addTodo(){
+  const el=document.getElementById('inp_todo'); const v=el.value.trim();
+  if(!v) return; DB.todo.push({id:uid(),text:v}); save(); render();
+}
+
+/* ===== 메모 ===== */
+let editingMemo=null;
+function viewMemo(){
+  let h = `<div class="memo-board">`;
+  h += `<button class="memo add" onclick="openMemo(null)">＋</button>`;
+  DB.memo.forEach(m=>{
+    h += `<div class="memo" onclick="openMemo('${m.id}')">
+      <button class="mdel" onclick="event.stopPropagation();delItem('memo','${m.id}')">✕</button>
+      ${esc(m.text)||'<span style="opacity:.4">(빈 메모)</span>'}
+    </div>`;
+  });
+  h += `</div>`;
+  return h;
+}
+function openMemo(id){
+  editingMemo=id;
+  const m = id? DB.memo.find(x=>x.id===id):null;
+  document.getElementById('memoText').value = m? m.text : '';
+  document.getElementById('memoOverlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('memoText').focus(),50);
+}
+function saveMemo(){
+  const v=document.getElementById('memoText').value;
+  if(editingMemo){ DB.memo.find(x=>x.id===editingMemo).text=v; }
+  else{ DB.memo.push({id:uid(),text:v}); }
+  save(); closeMemo(); render();
+}
+function closeMemo(){ document.getElementById('memoOverlay').classList.add('hidden'); editingMemo=null; }
+
+/* ===== 공용 ===== */
+function addRow(ph, fn, inputId){
+  return `<div class="addrow">
+    <input type="text" id="${inputId}" placeholder="${ph}"
+      onkeydown="if(event.key==='Enter'){${fn}}">
+    <button class="addbtn" onclick="${fn}">＋</button>
+  </div>`;
+}
+function delItem(key,id){ DB[key]=DB[key].filter(x=>x.id!==id); save(); render(); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+render();          // 폰에 저장된 값으로 우선 즉시 표시
+startSync();       // 그 다음 Firebase 공용 데이터로 연결 (실시간 공유)
+</script>
+</body>
+</html>
